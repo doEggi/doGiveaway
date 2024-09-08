@@ -222,6 +222,22 @@ werden sollen, false nur für diesen Kanal"#]
     Ok(())
 }
 
+#[poise::command(slash_command)]
+/// Zeigt einige Informationen :)
+pub async fn info(context: Context<'_, State, Error>) -> Result<()> {
+    context.defer_ephemeral().await?;
+    context
+        .say(
+            r#"Dieser Bot wurde von doEggi für McGyver erstellt und \
+dient dazu, Giveaways und einige Moderatoren-Aufgaben auf einem \
+Discord-Server zu übernehmen.\nGithub: https://github.com/doEggi/doGiveaway\n\n~doEggi was here..."#,
+        )
+        .await?;
+
+    Ok(())
+}
+
+/// This will be removed, because permissions are handled on the discord-server itself
 pub async fn check_permission(context: Context<'_, State, Error>) -> Result<bool> {
     Ok(match context.author_member().await {
         Some(val) => {
@@ -229,6 +245,7 @@ pub async fn check_permission(context: Context<'_, State, Error>) -> Result<bool
             //  Im not sure if ADMINISTRATOR overrides everything else here...
             permissions.contains(Permissions::CREATE_EVENTS)
                 || permissions.contains(Permissions::ADMINISTRATOR)
+                || context.command().name == "info"
         }
         None => false,
     })
