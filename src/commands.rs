@@ -228,9 +228,9 @@ pub async fn info(context: Context<'_, State, Error>) -> Result<()> {
     context.defer_ephemeral().await?;
     context
         .say(
-            r#"Dieser Bot wurde von doEggi für McGyver erstellt und \
-dient dazu, Giveaways und einige Moderatoren-Aufgaben auf einem \
-Discord-Server zu übernehmen.\nGithub: https://github.com/doEggi/doGiveaway\n\n~doEggi was here..."#,
+            "Dieser Bot wurde von doEggi für McGyver erstellt und \
+            dient dazu, Giveaways und einige Moderatoren-Aufgaben auf einem \
+            Discord-Server zu übernehmen.\nGithub: https://github.com/doEggi/doGiveaway\n\n~doEggi was here...",
         )
         .await?;
 
