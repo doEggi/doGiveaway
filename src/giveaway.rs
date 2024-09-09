@@ -5,7 +5,7 @@ use rand::{seq::SliceRandom, thread_rng};
 use serde::{Deserialize, Serialize};
 use std::{fmt::Display, num::NonZero};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Giveaway {
     pub title: String,
     pub message: MessageId,
@@ -71,7 +71,7 @@ impl Giveaway {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GiveawayId(pub NonZero<u32>);
 
 impl GiveawayId {

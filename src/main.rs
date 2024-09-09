@@ -6,7 +6,6 @@ mod state;
 use anyhow::{Error, Result};
 use commands::{cancel, clear, clearuser, create, finish, info};
 use events::{handle_event, handle_timeouts};
-use giveaway::Giveaway;
 use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents},
     FrameworkError, FrameworkOptions,
@@ -21,13 +20,15 @@ use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let giveaways: Vec<Giveaway> = match File::open("state.toml") {
+    let giveaways: InnerState = match File::open("state.toml") {
         Ok(mut file) => {
             let mut data = String::new();
             file.read_to_string(&mut data)?;
             toml::from_str(&data)?
         }
-        _ => Vec::new(),
+        _ => InnerState {
+            giveaways: Vec::new(),
+        },
     };
 
     let options: FrameworkOptions<State, Error> = poise::FrameworkOptions {
@@ -49,7 +50,7 @@ async fn main() -> Result<()> {
         }),
         ..Default::default()
     };
-    let state = Arc::new(Mutex::new(InnerState { giveaways }));
+    let state = Arc::new(Mutex::new(giveaways));
     let state_cpy = state.clone();
 
     let framework = poise::Framework::builder()
@@ -82,7 +83,8 @@ async fn main() -> Result<()> {
     tokio::signal::ctrl_c().await?;
     let state = state.lock().await;
     let mut file = File::create("state.toml")?;
-    write!(file, "{}", toml::to_string(&state.giveaways)?)?;
+    let string = toml::to_string(&(*state)).unwrap();
+    write!(file, "{}", string)?;
     println!("State saved!");
     Ok(())
 }
