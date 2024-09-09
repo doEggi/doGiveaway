@@ -2,9 +2,10 @@ use anyhow::Result;
 use chrono::{DateTime, Utc};
 use poise::serenity_prelude::{ChannelId, CreateMessage, GuildId, Http, MessageId, UserId};
 use rand::{seq::SliceRandom, thread_rng};
+use serde::{Deserialize, Serialize};
 use std::{fmt::Display, num::NonZero};
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Giveaway {
     pub title: String,
     pub message: MessageId,
@@ -70,7 +71,7 @@ impl Giveaway {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct GiveawayId(pub NonZero<u32>);
 
 impl GiveawayId {

@@ -4,8 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-tokio = { version = "1.40.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.40.0", features = ["rt-multi-thread", "signal"] }
 poise = "0.6.1"
 anyhow = "1.0.86"
 chrono = "0.4.38"
 rand = "0.8.5"
+toml = "0.8.19"
+serde = "1.0.210"
