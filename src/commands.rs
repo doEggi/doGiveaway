@@ -1,9 +1,7 @@
 use anyhow::{bail, Context as ctx, Error, Result};
 use chrono::{DateTime, Timelike};
 use poise::{
-    serenity_prelude::{
-        CreateChannel, CreateMessage, GetMessages, GuildChannel, Permissions, UserId,
-    },
+    serenity_prelude::{CreateChannel, CreateMessage, GetMessages, GuildChannel, UserId},
     Context,
 };
 use std::num::NonZero;
@@ -235,18 +233,4 @@ pub async fn info(context: Context<'_, State, Error>) -> Result<()> {
         .await?;
 
     Ok(())
-}
-
-/// This will be removed, because permissions are handled on the discord-server itself
-pub async fn check_permission(context: Context<'_, State, Error>) -> Result<bool> {
-    Ok(match context.author_member().await {
-        Some(val) => {
-            let permissions = val.permissions(context.cache())?;
-            //  Im not sure if ADMINISTRATOR overrides everything else here...
-            permissions.contains(Permissions::CREATE_EVENTS)
-                || permissions.contains(Permissions::ADMINISTRATOR)
-                || context.command().name == "info"
-        }
-        None => false,
-    })
 }

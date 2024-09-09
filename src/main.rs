@@ -4,7 +4,7 @@ mod giveaway;
 mod state;
 
 use anyhow::{Error, Result};
-use commands::{cancel, check_permission, clear, clearuser, create, finish, info};
+use commands::{cancel, clear, clearuser, create, finish, info};
 use events::{handle_event, handle_timeouts};
 use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents},
@@ -28,7 +28,6 @@ async fn main() -> Result<()> {
                 }
             })
         },
-        command_check: Some(|ctx| Box::pin(check_permission(ctx))),
         event_handler: (|ctx, event, framework, data| {
             Box::pin(async move { handle_event(ctx, event, framework, data).await })
         }),
