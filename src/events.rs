@@ -76,8 +76,6 @@ pub async fn handle_event(
 }
 
 pub async fn handle_timeouts(state: State, http: impl AsRef<Http>) -> ! {
-    let duration = Duration::from_secs((60 - chrono::offset::Local::now().second()).into());
-    sleep(duration).await;
     println!("Started timeout handler");
     loop {
         let giveaways: Vec<Giveaway> = {
