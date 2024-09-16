@@ -6,11 +6,12 @@ use poise::{
     serenity_prelude::{Context, FullEvent, Http, Reaction},
     FrameworkContext,
 };
-use tokio::time::sleep;
+use tokio::{fs, time::sleep};
 
 use crate::{
     giveaway::{Giveaway, GiveawayId},
     state::State,
+    STATE_PATH,
 };
 
 pub async fn handle_reaction_add(reaction: &Reaction, state: State) {
@@ -78,7 +79,7 @@ pub async fn handle_event(
 pub async fn handle_timeouts(state: State, http: impl AsRef<Http>) -> ! {
     println!("Started timeout handler");
     loop {
-        let giveaways: Vec<Giveaway> = {
+        let (giveaways, data): (Vec<Giveaway>, String) = {
             let now = chrono::offset::Utc::now();
             let mut state = state.lock().await;
             let ids: Vec<GiveawayId> = state
@@ -97,21 +98,26 @@ pub async fn handle_timeouts(state: State, http: impl AsRef<Http>) -> ! {
                 })
                 .collect();
 
-            ids.iter()
-                .map(|id| {
-                    let index = state
-                        .giveaways
-                        .iter()
-                        .position(|val| val.id == *id)
-                        .unwrap();
-                    state.giveaways.swap_remove(index)
-                })
-                .collect()
+            (
+                ids.iter()
+                    .map(|id| {
+                        let index = state
+                            .giveaways
+                            .iter()
+                            .position(|val| val.id == *id)
+                            .unwrap();
+                        state.giveaways.swap_remove(index)
+                    })
+                    .collect(),
+                toml::ser::to_string(&(*state)).unwrap(),
+            )
         };
 
         for giveaway in giveaways {
             giveaway.finish(&http).await.unwrap();
         }
+
+        fs::write(STATE_PATH, data).await.unwrap();
 
         let duration = Duration::from_secs((60 - chrono::offset::Local::now().second()).into());
         sleep(duration).await;

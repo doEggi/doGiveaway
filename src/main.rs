@@ -18,9 +18,11 @@ use std::{
 };
 use tokio::sync::Mutex;
 
+const STATE_PATH: &str = "state.toml";
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    let giveaways: InnerState = match File::open("state.toml") {
+    let giveaways: InnerState = match File::open(STATE_PATH) {
         Ok(mut file) => {
             let mut data = String::new();
             file.read_to_string(&mut data)?;
@@ -82,7 +84,7 @@ async fn main() -> Result<()> {
 
     tokio::signal::ctrl_c().await?;
     let state = state.lock().await;
-    let mut file = File::create("state.toml")?;
+    let mut file = File::create(STATE_PATH)?;
     let string = toml::to_string(&(*state)).unwrap();
     write!(file, "{}", string)?;
     println!("State saved!");

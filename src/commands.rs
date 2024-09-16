@@ -1,3 +1,8 @@
+use crate::{
+    giveaway::{Giveaway, GiveawayId},
+    state::State,
+    STATE_PATH,
+};
 use anyhow::{bail, Context as ctx, Error, Result};
 use chrono::{DateTime, Timelike};
 use poise::{
@@ -5,11 +10,7 @@ use poise::{
     Context,
 };
 use std::num::NonZero;
-
-use crate::{
-    giveaway::{Giveaway, GiveawayId},
-    state::State,
-};
+use tokio::fs;
 
 #[poise::command(slash_command)]
 pub async fn create(
@@ -83,10 +84,12 @@ pub async fn create(
     context.defer_ephemeral().await?;
     context.say("Giveaway erstellt!").await?;
 
-    {
+    let data = {
         let mut state = context.data().lock().await;
         state.giveaways.push(giveaway);
-    }
+        toml::ser::to_string(&(*state))?
+    };
+    fs::write(STATE_PATH, data).await?;
     Ok(())
 }
 
@@ -96,19 +99,26 @@ pub async fn finish(
     #[description = "Die ID vom Giveaway"] id: u32,
 ) -> Result<()> {
     let id = GiveawayId(id.try_into().context("Die ID darf nicht 0 sein")?);
-    let mut state = context.data().lock().await;
-    let index = state.giveaways.iter().position(|val| val.id == id);
-    if let None = index {
-        bail!("Kein Giveaway gefunden")
-    } else if state.giveaways.get(index.unwrap()).unwrap().guild != context.guild_id().unwrap() {
-        bail!(
-            "Dieser befehl muss auf dem Server ausgeführt werden, auf dem das Giveaway stattfindet"
+    let (giveaway, data) = {
+        let mut state = context.data().lock().await;
+        let index = state.giveaways.iter().position(|val| val.id == id);
+        if let None = index {
+            bail!("Kein Giveaway gefunden")
+        } else if state.giveaways.get(index.unwrap()).unwrap().guild != context.guild_id().unwrap()
+        {
+            bail!(
+                "Dieser befehl muss auf dem Server ausgeführt werden, auf dem das Giveaway stattfindet"
+            )
+        }
+        (
+            state.giveaways.swap_remove(index.unwrap()),
+            toml::ser::to_string(&(*state))?,
         )
-    }
-    let giveaway = state.giveaways.swap_remove(index.unwrap());
+    };
     giveaway.finish(context.http()).await?;
     context.defer_ephemeral().await?;
     context.say("Giveaway fertig!").await?;
+    fs::write(STATE_PATH, data).await?;
     Ok(())
 }
 
@@ -118,21 +128,28 @@ pub async fn cancel(
     #[description = "Die ID vom Giveaway"] id: u32,
 ) -> Result<()> {
     let id = GiveawayId(id.try_into().context("Die ID darf nicht 0 sein")?);
-    let mut state = context.data().lock().await;
-    let index = state.giveaways.iter().position(|val| val.id == id);
-    if let None = index {
-        bail!("Kein Giveaway gefunden")
-    } else if state.giveaways.get(index.unwrap()).unwrap().guild != context.guild_id().unwrap() {
-        bail!(
-            "Dieser befehl muss auf dem Server ausgeführt werden, auf dem das Giveaway stattfindet"
+    let (giveaway, data) = {
+        let mut state = context.data().lock().await;
+        let index = state.giveaways.iter().position(|val| val.id == id);
+        if let None = index {
+            bail!("Kein Giveaway gefunden")
+        } else if state.giveaways.get(index.unwrap()).unwrap().guild != context.guild_id().unwrap()
+        {
+            bail!(
+                "Dieser befehl muss auf dem Server ausgeführt werden, auf dem das Giveaway stattfindet"
+            )
+        }
+        (
+            state.giveaways.swap_remove(index.unwrap()),
+            toml::ser::to_string(&(*state))?,
         )
-    }
-    let giveaway = state.giveaways.swap_remove(index.unwrap());
+    };
     giveaway
         .cancel(context.http(), &context.author().id)
         .await?;
     context.defer_ephemeral().await?;
     context.say("Giveaway abgebrochen!").await?;
+    fs::write(STATE_PATH, data).await?;
     Ok(())
 }
 
