@@ -2,3 +2,4 @@
 token
 .DS_Store
 state.toml
+Cargo.lock

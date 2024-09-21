@@ -10,7 +10,9 @@ use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents},
     FrameworkError, FrameworkOptions,
 };
-use state::{InnerState, State};
+use reqwest::Client as HttpClient;
+use songbird::SerenityInit;
+use state::{HttpKey, InnerState, State};
 use std::{
     fs::File,
     io::{Read, Write},
@@ -74,6 +76,8 @@ async fn main() -> Result<()> {
 
     let mut client = ClientBuilder::new(include_str!("../token"), GatewayIntents::non_privileged())
         .framework(framework)
+        .register_songbird()
+        .type_map_insert::<HttpKey>(HttpClient::new())
         .await?;
 
     tokio::spawn(async move {
