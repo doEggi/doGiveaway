@@ -1,6 +1,6 @@
 use crate::{
     giveaway::{Giveaway, GiveawayId},
-    state::{HttpKey, State},
+    state::State,
     STATE_PATH,
 };
 use anyhow::{bail, Context as ctx, Error, Result};
@@ -9,7 +9,6 @@ use poise::{
     serenity_prelude::{CreateChannel, CreateMessage, GetMessages, GuildChannel, UserId},
     Context,
 };
-use songbird::input::YoutubeDl;
 use std::num::NonZero;
 use tokio::fs;
 
@@ -249,80 +248,6 @@ pub async fn info(context: Context<'_, State, Error>) -> Result<()> {
             Discord-Server zu übernehmen.\nGithub: https://github.com/doEggi/doGiveaway\n\n~doEggi was here...",
         )
         .await?;
-
-    Ok(())
-}
-
-#[poise::command(slash_command)]
-/// Spielt ein Lied in einem Sprachkanal ab
-pub async fn play(
-    context: Context<'_, State, Error>,
-    #[description = "Die URL des Liedes"] url: String,
-) -> Result<()> {
-    let (guild_id, channel_id) = {
-        let guild = context.guild().context("Nicht Teil eines Servers!")?;
-        let channel_id = guild
-            .voice_states
-            .get(&context.author().id)
-            .and_then(|voice_state| voice_state.channel_id)
-            .context("Nicht in einem Sprachkanal")?;
-
-        (guild.id, channel_id)
-    };
-
-    let manager = songbird::get(context.serenity_context())
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-
-    manager.join(guild_id, channel_id).await?;
-
-    //  Play fr
-
-    let http_client = {
-        let data = context.serenity_context().data.read().await;
-        data.get::<HttpKey>()
-            .cloned()
-            .context("Type-Map must contain Http-Client")
-            .unwrap()
-    };
-    let manager = songbird::get(context.serenity_context())
-        .await
-        .context("Could not initialize Songbird")?
-        .clone();
-
-    if let Some(handler_lock) = manager.get(guild_id) {
-        let mut handler = handler_lock.lock().await;
-
-        let src = YoutubeDl::new(http_client, url);
-        println!("Source: {:?}", src);
-        let track = handler.play_input(src.into());
-        println!("Track: {:?}", track);
-
-        context.defer_ephemeral().await?;
-        context.say("Gemacht, getan!").await?;
-    } else {
-        bail!("Nicht in einem Sprachkanal")
-    }
-
-    Ok(())
-}
-
-#[poise::command(slash_command)]
-pub async fn disconnect(context: Context<'_, State, Error>) -> Result<()> {
-    let guild_id = context.guild_id().context("Nicht auf einem Server!")?;
-
-    let manager = songbird::get(context.serenity_context())
-        .await
-        .expect("Songbird Voice client placed in at initialisation.")
-        .clone();
-
-    if let Some(_) = manager.get(guild_id) {
-        manager.remove(guild_id).await?;
-
-        context.defer_ephemeral().await?;
-        context.say("Fertsch").await?;
-    }
 
     Ok(())
 }

@@ -4,15 +4,13 @@ mod giveaway;
 mod state;
 
 use anyhow::{Error, Result};
-use commands::{cancel, clear, clearuser, create, disconnect, finish, info, play};
+use commands::{cancel, clear, clearuser, create, finish, info};
 use events::{handle_event, handle_timeouts};
 use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents},
     FrameworkError, FrameworkOptions,
 };
-use reqwest::Client as HttpClient;
-use songbird::SerenityInit;
-use state::{HttpKey, InnerState, State};
+use state::{InnerState, State};
 use std::{
     fs::File,
     io::{Read, Write},
@@ -36,16 +34,7 @@ async fn main() -> Result<()> {
     };
 
     let options: FrameworkOptions<State, Error> = poise::FrameworkOptions {
-        commands: vec![
-            create(),
-            finish(),
-            cancel(),
-            clear(),
-            clearuser(),
-            info(),
-            play(),
-            disconnect(),
-        ],
+        commands: vec![create(), finish(), cancel(), clear(), clearuser(), info()],
         on_error: |error: FrameworkError<'_, State, Error>| {
             Box::pin(async move {
                 match error {
@@ -85,8 +74,6 @@ async fn main() -> Result<()> {
 
     let mut client = ClientBuilder::new(include_str!("../token"), GatewayIntents::non_privileged())
         .framework(framework)
-        .register_songbird()
-        .type_map_insert::<HttpKey>(HttpClient::new())
         .await?;
 
     tokio::spawn(async move {
