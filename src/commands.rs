@@ -295,8 +295,9 @@ pub async fn play(
         let mut handler = handler_lock.lock().await;
 
         let src = YoutubeDl::new(http_client, url);
+        println!("Source: {:?}", src);
         let track = handler.play_input(src.into());
-        println!("{:?}", track.play());
+        println!("Track: {:?}", track);
 
         context.defer_ephemeral().await?;
         context.say("Gemacht, getan!").await?;
