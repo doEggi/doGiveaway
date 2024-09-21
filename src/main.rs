@@ -4,7 +4,7 @@ mod giveaway;
 mod state;
 
 use anyhow::{Error, Result};
-use commands::{cancel, clear, clearuser, create, finish, info};
+use commands::{cancel, clear, clearuser, create, disconnect, finish, info, play};
 use events::{handle_event, handle_timeouts};
 use poise::{
     serenity_prelude::{ClientBuilder, GatewayIntents},
@@ -36,7 +36,16 @@ async fn main() -> Result<()> {
     };
 
     let options: FrameworkOptions<State, Error> = poise::FrameworkOptions {
-        commands: vec![create(), finish(), cancel(), clear(), clearuser(), info()],
+        commands: vec![
+            create(),
+            finish(),
+            cancel(),
+            clear(),
+            clearuser(),
+            info(),
+            play(),
+            disconnect(),
+        ],
         on_error: |error: FrameworkError<'_, State, Error>| {
             Box::pin(async move {
                 match error {
